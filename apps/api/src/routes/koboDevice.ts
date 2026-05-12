@@ -71,6 +71,13 @@ const getLeadingHeaderValue = (
 };
 
 const getBaseUrlFromRequest = (request: FastifyRequest): string => {
+  // Prefer the explicitly configured BASE_URL: some Kobo devices omit the port
+  // from the Host header even for non-standard ports, which would produce broken
+  // download URLs if we derived the base URL from the request.
+  if (config.baseUrlConfigured) {
+    return config.baseUrl;
+  }
+
   const forwardedProto = getLeadingHeaderValue(request.headers["x-forwarded-proto"]);
   const forwardedHost = getLeadingHeaderValue(request.headers["x-forwarded-host"]);
   const protocol = forwardedProto || request.protocol || "http";
@@ -81,6 +88,14 @@ const getBaseUrlFromRequest = (request: FastifyRequest): string => {
 
   const host = getLeadingHeaderValue(request.headers.host);
   if (host) {
+    const hasPort = host.startsWith("[") ? host.includes("]:") : host.includes(":");
+    if (!hasPort) {
+      const localPort = request.socket.localPort?.toString() ?? "";
+      const isDefault = (protocol === "http" && localPort === "80") || (protocol === "https" && localPort === "443");
+      if (localPort && !isDefault) {
+        return `${protocol}://${host}:${localPort}`;
+      }
+    }
     return `${protocol}://${host}`;
   }
 

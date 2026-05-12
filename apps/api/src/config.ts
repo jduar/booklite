@@ -28,6 +28,7 @@ export const config = {
   port: toInt(process.env.PORT, 6060),
   host: process.env.HOST ?? "0.0.0.0",
   baseUrl: process.env.BASE_URL ?? `http://localhost:${toInt(process.env.PORT, 6060)}`,
+  baseUrlConfigured: !!process.env.BASE_URL,
   appDataDir: process.env.APP_DATA_DIR ?? path.join(process.cwd(), "app-data"),
   booksDir: process.env.BOOKS_DIR ?? path.join(process.cwd(), "books"),
   webDistDir: process.env.WEB_DIST_DIR ?? path.join(process.cwd(), "apps/web/dist"),
